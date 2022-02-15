@@ -11,12 +11,4 @@ kotlin {
     js {
         browser()
     }
-    sourceSets {
-        val jvmMain by getting {
-            dependencies {
-                implementation("io.ktor:ktor-server-netty:$ktorVersion")
-                implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-            }
-        }
-    }
 }
