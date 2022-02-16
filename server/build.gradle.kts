@@ -28,6 +28,8 @@ dependencies {
     implementation(kotlinWrappers("css"))
 
     testImplementation(kotlin("test"))
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 }
 
 application {
