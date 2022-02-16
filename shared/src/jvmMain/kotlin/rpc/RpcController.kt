@@ -1,1 +1,3 @@
+package rpc
+
 interface RpcController
