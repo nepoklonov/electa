@@ -8,31 +8,34 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import rpc.Method
+import rpc.MethodType
 import rpc.RpcController
-import java.io.Serializable
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
 import kotlin.reflect.full.*
 
 
+private val json = Json { isLenient = true }
+
 fun prepareArguments(
-    valueParameters: List<KParameter>, queryParameters: Map<String, String>, instance: RpcController
+    instance: RpcController,
+    function: KFunction<*>,
+    queryParameters: Map<String, String>
 ): MutableList<Any?> {
-    val args = mutableListOf<Any?>(instance)
-    valueParameters.mapTo(args) { param ->
-        Json { isLenient = true }.decodeFromString(
-            serializer(param.type), queryParameters[param.name.toString()] ?: error("param is missing")
-        )
+    return function.parameters.mapTo(mutableListOf(instance)) { param ->
+        val argumentValue = queryParameters[param.name] ?: error("parameter is missing")
+        Json.decodeFromString(serializer(param.type),argumentValue)
     }
-    return args
 }
 
 suspend fun processRequest(
-    function: KFunction<*>, serializedParameters: Map<String, String>, instance: RpcController
-): Serializable {
-    val deserializedParameters = prepareArguments(function.valueParameters, serializedParameters, instance)
-    val result = function.callSuspend(*deserializedParameters.toTypedArray())
+    instance: RpcController,
+    function: KFunction<*>,
+    serializedArguments: Map<String, String>
+): String {
+    val deserializedArguments = prepareArguments(instance, function, serializedArguments)
+    val result = function.callSuspend(*deserializedArguments.toTypedArray())
     return Json.encodeToString(serializer(function.returnType), result)
 }
 
@@ -45,17 +48,18 @@ fun Route.rpc(controllerClass: KClass<out RpcController>) {
             MethodType.GET -> get(function.name) {
                 val parameters = call.request.queryParameters.toMap().mapValues {
                     it.value.singleOrNull() ?: return@get call.respond(
-                        status = HttpStatusCode.BadRequest, message = "Multiple or empty values are not supported"
+                        status = HttpStatusCode.BadRequest,
+                        message = "Multiple or empty values are not supported"
                     )
                 }
-                val serializedResult = processRequest(function, parameters, instance)
+                val serializedResult = processRequest(instance, function, parameters)
                 call.respond(serializedResult)
             }
             MethodType.POST -> post(function.name) {
-                val parameters = Json { isLenient = true }.decodeFromString(
+                val parameters = json.decodeFromString(
                     MapSerializer(String.serializer(), String.serializer()), call.receiveText()
                 )
-                val serializedResult = processRequest(function, parameters, instance)
+                val serializedResult = processRequest(instance, function, parameters)
                 call.respond(serializedResult)
             }
             null -> error("Cannot find annotation")
