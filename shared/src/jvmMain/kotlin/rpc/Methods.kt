@@ -1,3 +1,5 @@
+package rpc
+
 enum class MethodType {
     GET,
     POST
