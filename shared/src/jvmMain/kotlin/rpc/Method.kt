@@ -5,4 +5,6 @@ enum class MethodType {
     POST
 }
 
-annotation class Method(val type: MethodType)
+annotation class Method(
+    val type: MethodType
+)
