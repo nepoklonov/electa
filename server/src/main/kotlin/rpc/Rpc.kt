@@ -4,8 +4,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import rpc.Method
@@ -56,9 +55,7 @@ fun Route.rpc(controllerClass: KClass<out RpcController>) {
                 call.respond(serializedResult)
             }
             MethodType.POST -> post(function.name) {
-                val parameters = json.decodeFromString(
-                    MapSerializer(String.serializer(), String.serializer()), call.receiveText()
-                )
+                val parameters = json.decodeFromString<Map<String, String>>(call.receiveText())
                 val serializedResult = processRequest(instance, function, parameters)
                 call.respond(serializedResult)
             }
