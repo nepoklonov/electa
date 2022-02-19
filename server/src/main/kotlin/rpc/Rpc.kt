@@ -16,26 +16,6 @@ import kotlin.reflect.full.*
 
 private val json = Json { isLenient = true }
 
-fun deserializeArguments(
-    function: KFunction<*>,
-    queryParameters: Map<String, String>
-): List<Any?> {
-    return function.valueParameters.map { param ->
-        val argumentValue = queryParameters[param.name] ?: error("parameter '${param.name}' is missing")
-        Json.decodeFromString(serializer(param.type), argumentValue)
-    }
-}
-
-suspend fun processRequest(
-    instance: RpcController,
-    function: KFunction<*>,
-    serializedArguments: Map<String, String>
-): String {
-    val deserializedArguments = deserializeArguments(function, serializedArguments)
-    val result = function.callSuspend(instance, *deserializedArguments.toTypedArray())
-    return Json.encodeToString(serializer(function.returnType), result)
-}
-
 fun Route.rpc(controllerClass: KClass<out RpcController>) {
     val instance = controllerClass.createInstance()
 
@@ -58,5 +38,25 @@ fun Route.rpc(controllerClass: KClass<out RpcController>) {
             }
             null -> error("Cannot find annotation")
         }
+    }
+}
+
+suspend fun processRequest(
+    instance: RpcController,
+    function: KFunction<*>,
+    serializedArguments: Map<String, String>
+): String {
+    val deserializedArguments = deserializeArguments(function, serializedArguments)
+    val result = function.callSuspend(instance, *deserializedArguments.toTypedArray())
+    return Json.encodeToString(serializer(function.returnType), result)
+}
+
+fun deserializeArguments(
+    function: KFunction<*>,
+    queryParameters: Map<String, String>
+): List<Any?> {
+    return function.valueParameters.map { param ->
+        val argumentValue = queryParameters[param.name] ?: error("parameter '${param.name}' is missing")
+        Json.decodeFromString(serializer(param.type), argumentValue)
     }
 }
