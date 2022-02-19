@@ -1,3 +1,5 @@
+package rpc
+
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -7,9 +9,6 @@ import io.ktor.util.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import rpc.Method
-import rpc.MethodType
-import rpc.RpcController
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.*
@@ -17,12 +16,11 @@ import kotlin.reflect.full.*
 
 private val json = Json { isLenient = true }
 
-fun prepareArguments(
-    instance: RpcController,
+fun deserializeArguments(
     function: KFunction<*>,
     queryParameters: Map<String, String>
-): MutableList<Any?> {
-    return function.valueParameters.mapTo(mutableListOf(instance)) { param ->
+): List<Any?> {
+    return function.valueParameters.map { param ->
         val argumentValue = queryParameters[param.name] ?: error("parameter '${param.name}' is missing")
         Json.decodeFromString(serializer(param.type), argumentValue)
     }
@@ -33,8 +31,8 @@ suspend fun processRequest(
     function: KFunction<*>,
     serializedArguments: Map<String, String>
 ): String {
-    val deserializedArguments = prepareArguments(instance, function, serializedArguments)
-    val result = function.callSuspend(*deserializedArguments.toTypedArray())
+    val deserializedArguments = deserializeArguments(function, serializedArguments)
+    val result = function.callSuspend(instance, *deserializedArguments.toTypedArray())
     return Json.encodeToString(serializer(function.returnType), result)
 }
 
@@ -42,7 +40,6 @@ fun Route.rpc(controllerClass: KClass<out RpcController>) {
     val instance = controllerClass.createInstance()
 
     controllerClass.declaredMemberFunctions.forEach { function ->
-
         when (function.findAnnotation<Method>()?.type) {
             MethodType.GET -> get(function.name) {
                 val parameters = call.request.queryParameters.toMap().mapValues {
