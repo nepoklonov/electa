@@ -22,9 +22,9 @@ fun prepareArguments(
     function: KFunction<*>,
     queryParameters: Map<String, String>
 ): MutableList<Any?> {
-    return function.parameters.mapTo(mutableListOf(instance)) { param ->
-        val argumentValue = queryParameters[param.name] ?: error("parameter is missing")
-        Json.decodeFromString(serializer(param.type),argumentValue)
+    return function.valueParameters.mapTo(mutableListOf(instance)) { param ->
+        val argumentValue = queryParameters[param.name] ?: error("parameter '${param.name}' is missing")
+        Json.decodeFromString(serializer(param.type), argumentValue)
     }
 }
 
