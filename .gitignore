@@ -8,4 +8,4 @@
 
 #Other
 build
-local.properties
+server/local.properties
