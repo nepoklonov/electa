@@ -10,6 +10,7 @@ val kotlinxSerializationVersion = project.property("kotlinx.serialization.versio
 val ktorVersion = project.property("ktor.version") as String
 val kotlinWrappersSuffix = project.property("kotlin.wrappers.suffix") as String
 val logbackVersion = project.property("logback.version") as String
+val ktorJsoupVersion = "1.6.4"
 
 fun kotlinWrappers(target: String): String =
     "org.jetbrains.kotlin-wrappers:kotlin-$target"
@@ -26,6 +27,11 @@ dependencies {
 
     implementation(enforcedPlatform(kotlinWrappers("wrappers-bom:0.0.1-${kotlinWrappersSuffix}")))
     implementation(kotlinWrappers("css"))
+
+    implementation ("com.tfowl.ktor:ktor-jsoup:$ktorJsoupVersion")
+
+    implementation ("io.ktor:ktor-client-cio:$ktorVersion")
+
 
     testImplementation(kotlin("test"))
 }
