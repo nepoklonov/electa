@@ -15,13 +15,17 @@ fun Application.module() {
     val client = HttpClient() {
         install(JsoupFeature)
     }
-    launch {
-        // collectRegions(client)
-    }
+
 
     database {
         SchemaUtils.create(Regions)
     }
+
+    launch {
+        val regions = collectRegions(client)
+        fillRegions(regions)
+    }
+
 
     routing {
         get("{...}") {
