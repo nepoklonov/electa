@@ -1,6 +1,6 @@
 package dto
 
-data class Region(
+data class RegionDto(
     val codename: String,
     val title: String
 )
