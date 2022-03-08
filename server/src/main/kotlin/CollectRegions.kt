@@ -2,12 +2,12 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import org.jsoup.nodes.Document
 
-suspend fun collectRegions(client: HttpClient): MutableSet<Region> {
+suspend fun collectRegions(client: HttpClient): MutableSet<RegionDto> {
     client.use {
 
         val feed = it.get<Document>("http://cikrf.ru/izbiratelnym-komissiyam/sites/")
 
-        val regions = mutableSetOf<Region>()
+        val regions = mutableSetOf<RegionDto>()
 
         feed.select("option").forEach { region ->
             val codename =
@@ -16,7 +16,7 @@ suspend fun collectRegions(client: HttpClient): MutableSet<Region> {
 
             if (codename != "" && title != "") {
                 regions.add(
-                    Region(
+                    RegionDto(
                         codename = codename,
                         title = title
                     )

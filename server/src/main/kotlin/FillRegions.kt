@@ -1,11 +1,10 @@
-import org.jetbrains.exposed.sql.insert
-
-fun fillRegions(regions: Set<Region>) {
-    regions.forEach { region ->
-        database {
-            Regions.insert {
-                it[codename] = region.codename
-                it[title] = region.title
+import tables.Region
+fun fillRegions(regions: Set<RegionDto>) {
+    transactionWithLogger {
+        regions.forEach { region ->
+            Region.new {
+                codename = region.codename
+                title = region.title
             }
         }
     }

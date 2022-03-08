@@ -8,17 +8,19 @@ import java.util.*
 
 
 val properties = Properties().apply {
-        load(Resources.resolve("local.properties")?.openStream() ?: throw FileNotFoundException())
+    load(Resources.resolve("local.properties")?.openStream() ?: throw FileNotFoundException())
 }
 
-fun <T> database(statement: Transaction.() -> T): T {
+fun connectToDatabase(){
     Database.connect(
         url = "jdbc:postgresql://localhost/electa",
         driver = "org.postgresql.Driver",
-        user = properties["user"] as? String ?: error( "invalid postgres user"),
-        password = properties["password"] as? String ?: error( "invalid postgres password")
+        user = properties["user"] as? String ?: error("invalid postgres user"),
+        password = properties["password"] as? String ?: error("invalid postgres password")
     )
+}
 
+fun <T> transactionWithLogger(statement: Transaction.() -> T): T {
     return transaction {
         addLogger(StdOutSqlLogger)
         statement()

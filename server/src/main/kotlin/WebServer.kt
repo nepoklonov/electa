@@ -9,6 +9,7 @@ import kotlinx.html.div
 import kotlinx.html.id
 import kotlinx.html.script
 import org.jetbrains.exposed.sql.SchemaUtils
+import tables.Regions
 
 @Suppress("unused")
 fun Application.module() {
@@ -16,8 +17,9 @@ fun Application.module() {
         install(JsoupFeature)
     }
 
-
-    database {
+    connectToDatabase()
+    transactionWithLogger {
+        SchemaUtils.drop(Regions)
         SchemaUtils.create(Regions)
     }
 
