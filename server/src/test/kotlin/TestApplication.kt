@@ -6,7 +6,8 @@ import rpc.rpc
 fun Application.test() {
     routing {
         route("/api") {
-            rpc(TestController::class)
+            rpc(PostServerController::class)
+            rpc(GetServerController::class)
         }
     }
 }
