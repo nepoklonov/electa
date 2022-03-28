@@ -18,7 +18,8 @@ suspend fun collectRegions(client: HttpClient): MutableSet<RegionDto> {
                 regions.add(
                     RegionDto(
                         codename = codename,
-                        title = title
+                        title = title,
+                        code = null
                     )
                 )
             }

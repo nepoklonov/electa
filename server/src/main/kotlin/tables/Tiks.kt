@@ -4,12 +4,13 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import tables.Uik.Companion.referrersOn
 
 object Tiks : IntIdTable() {
     val title = text("title")
     val vrn = integer("vrn")
 
-    val regionId = integer("regionId")
+    val region = reference("region", Regions)
 
     val address = text("address")
     val latitude = float("latitude")// широта
@@ -28,7 +29,7 @@ class Tik(id: EntityID<Int>) : IntEntity(id) {
     var title by Tiks.title
     var vrn by Tiks.vrn
 
-    var regionId by Tiks.regionId
+    var region by Region referencedOn Tiks.region
 
     var address by Tiks.address
     var latitude by Tiks.latitude// широта

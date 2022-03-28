@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 object Regions : IntIdTable() {
     val codename = text("codename")
     val title = text("title")
+    val code = integer("code").nullable()
 }
 
 
@@ -16,4 +17,5 @@ class Region(id: EntityID<Int>) : IntEntity(id) {
 
     var codename by Regions.codename
     var title by Regions.title
+    var code by Regions.code
 }

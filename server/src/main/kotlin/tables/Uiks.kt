@@ -10,7 +10,7 @@ object Uiks : IntIdTable() {
     val vrn = integer("vrn")
     val num = integer("num")
 
-    val regionId = integer("regionId")
+    val region = reference("region", Regions)
 
     val commissionAddress = text("commissionAddress") //Адрес комиссии
     val commissionLatitude = float("commissionLatitude")// широта
@@ -34,7 +34,7 @@ class Uik(id: EntityID<Int>) : IntEntity(id) {
     var vrn by Uiks.vrn
     var num by Uiks.num
 
-    var regionId by Uiks.regionId
+    var region by Region referencedOn Uiks.region
 
     var commissionAddress by Uiks.commissionAddress //Адрес комиссии
     var commissionLatitude by Uiks.commissionLatitude// широта
