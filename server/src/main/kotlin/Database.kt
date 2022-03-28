@@ -3,6 +3,7 @@ import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
+import utils.Resources
 import java.io.FileNotFoundException
 import java.util.*
 
@@ -26,4 +27,3 @@ fun <T> transactionWithLogger(statement: Transaction.() -> T): T {
         statement()
     }
 }
-

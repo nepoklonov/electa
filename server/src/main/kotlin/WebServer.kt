@@ -13,7 +13,7 @@ import tables.Regions
 
 @Suppress("unused")
 fun Application.module() {
-    val client = HttpClient() {
+    val client = HttpClient {
         install(JsoupFeature)
     }
 

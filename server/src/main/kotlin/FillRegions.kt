@@ -1,4 +1,6 @@
 import tables.Region
+
+
 fun fillRegions(regions: Set<RegionDto>) {
     transactionWithLogger {
         regions.forEach { region ->
