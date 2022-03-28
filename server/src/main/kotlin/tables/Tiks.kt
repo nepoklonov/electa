@@ -19,7 +19,6 @@ object Tiks : IntIdTable() {
     val email = text("email")
     val endDate = text("endDate") //Срок окончания полномочий
     val extensionDate = text("extensionDate") //Продление срока полномочий
-    //TODO: commissionMembers -- Члены избирательной комиссии с правом решающего голоса
 }
 
 
@@ -39,5 +38,6 @@ class Tik(id: EntityID<Int>) : IntEntity(id) {
     var email by Tiks.email
     var endDate by Tiks.endDate //Срок окончания полномочий
     var extensionDate by Tiks.extensionDate //Продление срока полномочий
-    //TODO: commissionMembers -- Члены избирательной комиссии с правом решающего голоса
+
+    var commissionMember by CommissionMember via TikCommissionMembers //Члены избирательной комиссии с правом решающего голоса
 }

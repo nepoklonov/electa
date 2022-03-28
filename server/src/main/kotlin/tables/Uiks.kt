@@ -24,7 +24,6 @@ object Uiks : IntIdTable() {
     val pollingStationLatitude = float("pollingStationLatitude")// широта
     val pollingStationLongitude = float("pollingStationLongitude") // долгота
     val pollingStationType = text("pollingStationType") //Тип помещения для голосования
-    //TODO: commissionMembers -- Члены избирательной комиссии с правом решающего голоса
 }
 
 
@@ -49,5 +48,7 @@ class Uik(id: EntityID<Int>) : IntEntity(id) {
     var pollingStationLatitude by Uiks.pollingStationLatitude// широта
     var pollingStationLongitude by Uiks.pollingStationLongitude// долгота
     var pollingStationType by Uiks.pollingStationType //Тип помещения для голосования
-    //TODO: commissionMembers -- Члены избирательной комиссии с правом решающего голоса
+
+    var commissionMember by CommissionMember via UikCommissionMembers //Члены избирательной комиссии с правом решающего голоса
+
 }

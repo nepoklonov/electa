@@ -13,5 +13,5 @@ data class UikDto(
     val pollingStationLatitude: Float, // широта
     val pollingStationLongitude: Float, // долгота
     val pollingStationType: String, //Тип помещения для голосования
-    //TODO: commissionMembers -- Члены избирательной комиссии с правом решающего голоса
+    val commissionMembers: List<CommissionMemberDto>, //Члены избирательной комиссии с правом решающего голоса
 )

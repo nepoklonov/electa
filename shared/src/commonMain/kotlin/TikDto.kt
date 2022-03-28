@@ -9,5 +9,5 @@ data class TikDto(
     val email: String,
     val endDate: String, //Срок окончания полномочий
     val extensionDate: String, //Продление срока полномочий
-    //TODO: commissionMembers -- Члены избирательной комиссии с правом решающего голоса
+    val commissionMembers: List<CommissionMemberDto>, //Члены избирательной комиссии с правом решающего голоса
 )
