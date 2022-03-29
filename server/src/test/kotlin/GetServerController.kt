@@ -2,8 +2,8 @@ import rpc.Method
 import rpc.MethodType
 import rpc.RpcController
 
-class GetServerController : RpcController, ServerInterface {
-    private val implementation: ServerInterface = Implementation()
+class GetServerController : RpcController, TestRpcController {
+    private val implementation: TestRpcController = ImplementationFunsForRPCTests()
 
     @Method(MethodType.GET)
     override fun intProduct(arg1: Int, arg2: Int): Int = implementation.intProduct(arg1, arg2)
@@ -21,16 +21,16 @@ class GetServerController : RpcController, ServerInterface {
 
     @Method(MethodType.GET)
     override fun mmJoin(arg1: Map<Map<Int, String>, Map<String, Int>>, arg2: Map<Map<String, Int>, Map<Int, String>>):
-            Map<Map<Int, Int>, Map<String, String>> = implementation.mmJoin(arg1, arg2)
+            Map<Map<Int, String>, Map<Int, String>> = implementation.mmJoin(arg1, arg2)
 
     @Method(MethodType.GET)
     override fun pairOfPair(arg1: Pair<Int, Int>, arg2: Pair<Char, Char>): Pair<Pair<Int, Int>, Pair<Char, Char>> =
         implementation.pairOfPair(arg1, arg2)
 
     @Method(MethodType.GET)
-    override fun enumClassStr(arg1: EnumArguments, arg2: EnumArguments): String =
+    override fun enumClassStr(arg1: EnumArgumentsForRPCTests, arg2: EnumArgumentsForRPCTests): String =
         implementation.enumClassStr(arg1, arg2)
 
     @Method(MethodType.GET)
-    override fun sealedClassNum(arg1: SealedArguments): Int = implementation.sealedClassNum(arg1)
+    override fun sealedClassNum(arg1: SealedArgumentsForRPCTests): Int = implementation.sealedClassNum(arg1)
 }

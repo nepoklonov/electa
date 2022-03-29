@@ -3,9 +3,9 @@ import io.ktor.http.*
 import io.ktor.http.HttpMethod.Companion.Get
 import io.ktor.http.HttpMethod.Companion.Post
 import io.ktor.server.testing.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import rpc.MethodType
 import rpc.json
 import kotlin.test.*
 
@@ -25,19 +25,8 @@ val mapArg2: Map<String, Int> = mapOf("one" to 1, "two" to 2)
 val mmArg1: Map<Map<Int, String>, Map<String, Int>> = mapOf(mapArg1 to mapArg2)
 val mmArg2: Map<Map<String, Int>, Map<Int, String>> = mapOf(mapArg2 to mapArg1)
 
-val pairArg1: Pair<Int, Int> = Pair(1, 2)
-val pairArg2: Pair<Char, Char> = Pair('a', 'b')
-
-enum class EnumArguments(val par: Int) {
-    ARG1(123),
-    ARG2(321)
-}
-
-@Serializable
-sealed class SealedArguments {
-    @Serializable
-    class Const(val num: Int) : SealedArguments()
-}
+val pairArg1: Pair<Int, Int> = 1 to 2
+val pairArg2: Pair<Char, Char> = 'a' to 'b'
 
 val postController = PostServerController()
 val getController = GetServerController()
@@ -47,26 +36,26 @@ fun buildPost(block: Body.() -> Unit): Map<String, String> {
 }
 
 fun buildGet(block: Body.() -> Unit): String{
-    return Body().apply(block).getUrl.dropLast(1)
+    var request = "?"
+    Body().apply(block).map.forEach {
+        request += "${it.key}=${it.value}&"
+    }
+    return request.dropLast(1)
 }
 
 class Body {
     val map: MutableMap<String, String> = mutableMapOf()
-    var getUrl: String = ""
     
-    inline fun <reified T> setPost(name: String, value: T) {
+    inline fun <reified T> set(name: String, value: T) {
         map[name] = json.encodeToString(value)
-    }
-    inline fun <reified T> setGet(name: String, value: T) {
-        getUrl += "$name=${json.encodeToString(value)}&"
     }
 }
 
-inline fun <reified T> testRpc(url: String, type: HttpMethod, body: Map<String, String>? = null, expected: T) =
+inline fun <reified T> testRpc(url: String, type: MethodType, body: Map<String, String> = mapOf(), expected: T) =
     withTestApplication(Application::test) {
-        with(handleRequest(type, url) {
+        with(handleRequest(if(type == MethodType.GET) Get else Post, url) {
             addHeader(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
-            if (body != null) setBody(json.encodeToString(body))
+            if (body != {}) setBody(json.encodeToString(body))
         })
         {
             assertEquals(HttpStatusCode.OK, response.status())
@@ -78,168 +67,168 @@ class RpcTest {
 
     @Test
     fun `send two nums and receive their product by GET`() = testRpc(
-        url = "/api/intProduct?" + buildGet{
-            setGet("arg1", intArg1)
-            setGet("arg2", intArg2)
+        url = "/api/intProduct" + buildGet{
+            set("arg1", intArg1)
+            set("arg2", intArg2)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.intProduct(intArg1, intArg2)
     )
 
     @Test
     fun `send two nums and receive their product by POST`() = testRpc(
         url = "/api/intProduct",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", intArg1)
-            setPost("arg2", intArg2)
+            set("arg1", intArg1)
+            set("arg2", intArg2)
         },
         expected = postController.intProduct(intArg1, intArg2)
     )
 
     @Test
     fun `send two strings and receive their sum by GET`() = testRpc(
-        url = "/api/strSum?" + buildGet{
-            setGet("arg1", strArg1)
-            setGet("arg2", strArg2)
+        url = "/api/strSum" + buildGet{
+            set("arg1", strArg1)
+            set("arg2", strArg2)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.strSum(strArg1, strArg2)
     )
 
     @Test
     fun `send two strings and receive their sum by POST`() = testRpc(
         url = "/api/strSum",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", strArg1)
-            setPost("arg2", strArg2)
+            set("arg1", strArg1)
+            set("arg2", strArg2)
         },
         expected = postController.strSum(strArg1, strArg2)
     )
 
     @Test
     fun `send two lists and receive their combination by GET`() = testRpc(
-        url = "/api/listSum?" + buildGet{
-            setGet("arg1", listArg1)
-            setGet("arg2", listArg2)
+        url = "/api/listSum" + buildGet{
+            set("arg1", listArg1)
+            set("arg2", listArg2)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.listSum(listArg1, listArg2)
     )
 
     @Test
     fun `send two lists and receive their combination by POST`() = testRpc(
         url = "/api/listSum",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", listArg1)
-            setPost("arg2", listArg2)
+            set("arg1", listArg1)
+            set("arg2", listArg2)
         },
         expected = postController.listSum(listArg1, listArg2)
     )
 
     @Test
     fun `send two maps and receive their join by GET`() = testRpc(
-        url = "/api/mapJoin?" + buildGet{
-            setGet("arg1", mapArg1)
-            setGet("arg2", mapArg2)
+        url = "/api/mapJoin" + buildGet{
+            set("arg1", mapArg1)
+            set("arg2", mapArg2)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.mapJoin(mapArg1, mapArg2)
     )
 
     @Test
     fun `send two maps and receive their join by POST`() = testRpc(
         url = "/api/mapJoin",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", mapArg1)
-            setPost("arg2", mapArg2)
+            set("arg1", mapArg1)
+            set("arg2", mapArg2)
         },
         expected = postController.mapJoin(mapArg1, mapArg2)
     )
 
     @Test
     fun `send two maps(Map, Map) and receive their sum by GET`() = testRpc(
-        url = "/api/mmJoin?" + buildGet{
-            setGet("arg1", mmArg1)
-            setGet("arg2", mmArg2)
+        url = "/api/mmJoin" + buildGet{
+            set("arg1", mmArg1)
+            set("arg2", mmArg2)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.mmJoin(mmArg1, mmArg2)
     )
 
     @Test
     fun `send two maps(Map, Map) and receive their sum by POST`() = testRpc(
         url = "/api/mmJoin",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", mmArg1)
-            setPost("arg2", mmArg2)
+            set("arg1", mmArg1)
+            set("arg2", mmArg2)
         },
         expected = postController.mmJoin(mmArg1, mmArg2)
     )
 
     @Test
     fun `send two pairs and receive their sum by GET`() = testRpc(
-        url = "/api/pairOfPair?" + buildGet{
-            setGet("arg1", pairArg1)
-            setGet("arg2", pairArg2)
+        url = "/api/pairOfPair" + buildGet{
+            set("arg1", pairArg1)
+            set("arg2", pairArg2)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.pairOfPair(pairArg1, pairArg2)
     )
 
     @Test
     fun `send two pairs and receive their sum by POST`() = testRpc(
         url = "/api/pairOfPair",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", pairArg1)
-            setPost("arg2", pairArg2)
+            set("arg1", pairArg1)
+            set("arg2", pairArg2)
         },
         expected = postController.pairOfPair(pairArg1, pairArg2)
     )
 
     @Test
     fun `send two enum class instances and receive their sum by GET`() = testRpc(
-        url = "/api/enumClassStr?" + buildGet {
-            setGet("arg1", EnumArguments.ARG1)
-            setGet("arg2", EnumArguments.ARG2)
+        url = "/api/enumClassStr" + buildGet{
+            set("arg1", EnumArgumentsForRPCTests.ARG1)
+            set("arg2", EnumArgumentsForRPCTests.ARG2)
         },
-        type = Get,
-        expected = getController.enumClassStr(EnumArguments.ARG1, EnumArguments.ARG2)
+        type = MethodType.GET,
+        expected = getController.enumClassStr(EnumArgumentsForRPCTests.ARG1, EnumArgumentsForRPCTests.ARG2)
     )
 
     @Test
     fun `send two enum class instances and receive their sum by POST`() = testRpc(
         url = "/api/enumClassStr",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", EnumArguments.ARG1)
-            setPost("arg2", EnumArguments.ARG2)
+            set("arg1", EnumArgumentsForRPCTests.ARG1)
+            set("arg2", EnumArgumentsForRPCTests.ARG2)
         },
-        expected = postController.enumClassStr(EnumArguments.ARG1, EnumArguments.ARG2)
+        expected = postController.enumClassStr(EnumArgumentsForRPCTests.ARG1, EnumArgumentsForRPCTests.ARG2)
     )
 
-    private val arg: SealedArguments = SealedArguments.Const(1)
+    private val arg: SealedArgumentsForRPCTests = SealedArgumentsForRPCTests.Const(1)
 
     @Test
-    fun `send one sealed class instance and receive him num by GET`() = testRpc(
-        url = "/api/sealedClassNum?" + buildGet {
-            setGet("arg1", arg)
+    fun `send one sealed class instance and receive its num by GET`() = testRpc(
+        url = "/api/sealedClassNum" + buildGet{
+            set("arg1", arg)
         },
-        type = Get,
+        type = MethodType.GET,
         expected = getController.sealedClassNum(arg)
     )
 
     @Test
-    fun `send one sealed class instance and receive him num by POST`() = testRpc(
+    fun `send one sealed class instance and receive its num by POST`() = testRpc(
         url = "/api/sealedClassNum",
-        type = Post,
+        type = MethodType.POST,
         body = buildPost {
-            setPost("arg1", arg)
+            set("arg1", arg)
         },
         expected = postController.sealedClassNum(arg)
     )

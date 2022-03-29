@@ -1,2 +1,2 @@
-fun <A, B, C> mapJoinFun(arg1: Map<A, B>, arg2: Map<B, C>): Map<A, C> =
-    arg1.mapNotNull { it.key to (arg2[it.value] ?: return@mapNotNull null) }.toMap()
+fun <A, B, C> Map<A, B>.joinWith(other: Map<B, C>): Map<A, C> =
+    this.mapNotNull { it.key to (other[it.value] ?: return@mapNotNull null) }.toMap()
