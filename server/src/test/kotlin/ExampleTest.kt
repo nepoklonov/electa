@@ -31,43 +31,51 @@ val pairArg2: Pair<Char, Char> = 'a' to 'b'
 val postController = PostServerController()
 val getController = GetServerController()
 
-fun buildPost(block: Body.() -> Unit): Map<String, String> {
-    return Body().apply(block).map
-}
-
-fun buildGet(block: Body.() -> Unit): String{
-    var request = "?"
-    Body().apply(block).map.forEach {
-        request += "${it.key}=${it.value}&"
-    }
-    return request.dropLast(1)
+fun build(block: Body.() -> Unit): Body {
+    return Body().apply(block)
 }
 
 class Body {
     val map: MutableMap<String, String> = mutableMapOf()
-    
+
     inline fun <reified T> set(name: String, value: T) {
         map[name] = json.encodeToString(value)
     }
+
+    override fun toString(): String = json.encodeToString(map)
 }
 
-inline fun <reified T> testRpc(url: String, type: MethodType, body: Map<String, String> = mapOf(), expected: T) =
-    withTestApplication(Application::test) {
-        with(handleRequest(if(type == MethodType.GET) Get else Post, url) {
-            addHeader(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
-            if (body != {}) setBody(json.encodeToString(body))
-        })
-        {
-            assertEquals(HttpStatusCode.OK, response.status())
-            assertEquals(expected, response.content?.let { json.decodeFromString(it) })
-        }
+fun Body.toGetQueryBy(url: String) = map.entries.joinToString(
+    separator = "&", prefix = "$url?"
+) { (key, value) -> "$key=$value" }
+
+val Body.isEmpty get() = map.isEmpty()
+
+inline fun <reified T> testRPC(
+    url: String,
+    type: MethodType,
+    body: Body = Body(),
+    expected: T
+) = withTestApplication(Application::test) {
+
+    val method = if (type == MethodType.GET) Get else Post
+    val fullURL = if (type == MethodType.GET) body.toGetQueryBy(url) else url
+
+    with(handleRequest(method, fullURL) {
+        addHeader(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
+        if (!body.isEmpty) setBody(body.toString())
+    }) {
+        assertEquals(HttpStatusCode.OK, response.status())
+        assertEquals(expected, response.content?.let { json.decodeFromString(it) })
     }
+}
 
 class RpcTest {
 
     @Test
-    fun `send two nums and receive their product by GET`() = testRpc(
-        url = "/api/intProduct" + buildGet{
+    fun `send two nums and receive their product by GET`() = testRPC(
+        url = "/api/intProduct",
+        body = build {
             set("arg1", intArg1)
             set("arg2", intArg2)
         },
@@ -76,10 +84,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two nums and receive their product by POST`() = testRpc(
+    fun `send two nums and receive their product by POST`() = testRPC(
         url = "/api/intProduct",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", intArg1)
             set("arg2", intArg2)
         },
@@ -87,8 +95,9 @@ class RpcTest {
     )
 
     @Test
-    fun `send two strings and receive their sum by GET`() = testRpc(
-        url = "/api/strSum" + buildGet{
+    fun `send two strings and receive their sum by GET`() = testRPC(
+        url = "/api/strSum",
+        body = build {
             set("arg1", strArg1)
             set("arg2", strArg2)
         },
@@ -97,10 +106,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two strings and receive their sum by POST`() = testRpc(
+    fun `send two strings and receive their sum by POST`() = testRPC(
         url = "/api/strSum",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", strArg1)
             set("arg2", strArg2)
         },
@@ -108,8 +117,9 @@ class RpcTest {
     )
 
     @Test
-    fun `send two lists and receive their combination by GET`() = testRpc(
-        url = "/api/listSum" + buildGet{
+    fun `send two lists and receive their combination by GET`() = testRPC(
+        url = "/api/listSum",
+        body = build {
             set("arg1", listArg1)
             set("arg2", listArg2)
         },
@@ -118,10 +128,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two lists and receive their combination by POST`() = testRpc(
+    fun `send two lists and receive their combination by POST`() = testRPC(
         url = "/api/listSum",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", listArg1)
             set("arg2", listArg2)
         },
@@ -129,8 +139,9 @@ class RpcTest {
     )
 
     @Test
-    fun `send two maps and receive their join by GET`() = testRpc(
-        url = "/api/mapJoin" + buildGet{
+    fun `send two maps and receive their join by GET`() = testRPC(
+        url = "/api/mapJoin",
+        body = build {
             set("arg1", mapArg1)
             set("arg2", mapArg2)
         },
@@ -139,10 +150,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two maps and receive their join by POST`() = testRpc(
+    fun `send two maps and receive their join by POST`() = testRPC(
         url = "/api/mapJoin",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", mapArg1)
             set("arg2", mapArg2)
         },
@@ -150,8 +161,9 @@ class RpcTest {
     )
 
     @Test
-    fun `send two maps(Map, Map) and receive their sum by GET`() = testRpc(
-        url = "/api/mmJoin" + buildGet{
+    fun `send two maps(Map, Map) and receive their sum by GET`() = testRPC(
+        url = "/api/mmJoin",
+        body = build {
             set("arg1", mmArg1)
             set("arg2", mmArg2)
         },
@@ -160,10 +172,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two maps(Map, Map) and receive their sum by POST`() = testRpc(
+    fun `send two maps(Map, Map) and receive their sum by POST`() = testRPC(
         url = "/api/mmJoin",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", mmArg1)
             set("arg2", mmArg2)
         },
@@ -171,8 +183,9 @@ class RpcTest {
     )
 
     @Test
-    fun `send two pairs and receive their sum by GET`() = testRpc(
-        url = "/api/pairOfPair" + buildGet{
+    fun `send two pairs and receive their sum by GET`() = testRPC(
+        url = "/api/pairOfPair",
+        body = build {
             set("arg1", pairArg1)
             set("arg2", pairArg2)
         },
@@ -181,10 +194,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two pairs and receive their sum by POST`() = testRpc(
+    fun `send two pairs and receive their sum by POST`() = testRPC(
         url = "/api/pairOfPair",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", pairArg1)
             set("arg2", pairArg2)
         },
@@ -192,8 +205,9 @@ class RpcTest {
     )
 
     @Test
-    fun `send two enum class instances and receive their sum by GET`() = testRpc(
-        url = "/api/enumClassStr" + buildGet{
+    fun `send two enum class instances and receive their sum by GET`() = testRPC(
+        url = "/api/enumClassStr",
+        body = build {
             set("arg1", EnumArgumentsForRPCTests.ARG1)
             set("arg2", EnumArgumentsForRPCTests.ARG2)
         },
@@ -202,10 +216,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send two enum class instances and receive their sum by POST`() = testRpc(
+    fun `send two enum class instances and receive their sum by POST`() = testRPC(
         url = "/api/enumClassStr",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", EnumArgumentsForRPCTests.ARG1)
             set("arg2", EnumArgumentsForRPCTests.ARG2)
         },
@@ -215,8 +229,9 @@ class RpcTest {
     private val arg: SealedArgumentsForRPCTests = SealedArgumentsForRPCTests.Const(1)
 
     @Test
-    fun `send one sealed class instance and receive its num by GET`() = testRpc(
-        url = "/api/sealedClassNum" + buildGet{
+    fun `send one sealed class instance and receive its num by GET`() = testRPC(
+        url = "/api/sealedClassNum",
+        body = build {
             set("arg1", arg)
         },
         type = MethodType.GET,
@@ -224,10 +239,10 @@ class RpcTest {
     )
 
     @Test
-    fun `send one sealed class instance and receive its num by POST`() = testRpc(
+    fun `send one sealed class instance and receive its num by POST`() = testRPC(
         url = "/api/sealedClassNum",
         type = MethodType.POST,
-        body = buildPost {
+        body = build {
             set("arg1", arg)
         },
         expected = postController.sealedClassNum(arg)
