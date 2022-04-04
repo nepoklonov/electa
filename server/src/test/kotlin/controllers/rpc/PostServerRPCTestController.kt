@@ -1,9 +1,13 @@
+package controllers.rpc
+
 import rpc.Method
 import rpc.MethodType
 import rpc.RpcController
+import test.RPCTestEnumArgument
+import test.RPCTestSealedArgument
 
-class PostServerController : RpcController, TestRpcController {
-    private val implementation: TestRpcController = ImplementationFunsForRPCTests()
+class PostServerRPCTestController : RpcController, RPCTestController {
+    private val implementation: RPCTestController = RPCTestControllerImplementation()
 
     @Method(MethodType.POST)
     override fun intProduct(arg1: Int, arg2: Int): Int = implementation.intProduct(arg1, arg2)
@@ -16,21 +20,21 @@ class PostServerController : RpcController, TestRpcController {
         implementation.listSum(arg1, arg2)
 
     @Method(MethodType.POST)
-    override fun mapJoin(arg1: Map<Int, String>, arg2: Map<String, Int>): Map<Int, Int> =
-        implementation.mapJoin(arg1, arg2)
+    override fun mapsJoin(arg1: Map<Int, String>, arg2: Map<String, Int>): Map<Int, Int> =
+        implementation.mapsJoin(arg1, arg2)
 
     @Method(MethodType.POST)
-    override fun mmJoin(arg1: Map<Map<Int, String>, Map<String, Int>>, arg2: Map<Map<String, Int>, Map<Int, String>>):
-            Map<Map<Int, String>, Map<Int, String>> = implementation.mmJoin(arg1, arg2)
+    override fun nestedMapsJoin(arg1: Map<Map<Int, String>, Map<String, Int>>, arg2: Map<Map<String, Int>, Map<Int, String>>):
+            Map<Map<Int, String>, Map<Int, String>> = implementation.nestedMapsJoin(arg1, arg2)
 
     @Method(MethodType.POST)
     override fun pairOfPair(arg1: Pair<Int, Int>, arg2: Pair<Char, Char>): Pair<Pair<Int, Int>, Pair<Char, Char>> =
         implementation.pairOfPair(arg1, arg2)
 
     @Method(MethodType.POST)
-    override fun enumClassStr(arg1: EnumArgumentsForRPCTests, arg2: EnumArgumentsForRPCTests): String =
+    override fun enumClassStr(arg1: RPCTestEnumArgument, arg2: RPCTestEnumArgument): String =
         implementation.enumClassStr(arg1, arg2)
 
     @Method(MethodType.POST)
-    override fun sealedClassNum(arg1: SealedArgumentsForRPCTests): Int = implementation.sealedClassNum(arg1)
+    override fun sealedClassNum(arg1: RPCTestSealedArgument): Int = implementation.sealedClassNum(arg1)
 }
