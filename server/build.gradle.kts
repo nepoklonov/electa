@@ -37,6 +37,8 @@ dependencies {
     implementation("org.postgresql:postgresql:42.2.2")
 
     testImplementation(kotlin("test"))
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 }
 
 application {
